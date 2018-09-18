@@ -1,6 +1,7 @@
 package net.lexman.partagephoto;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -28,6 +29,10 @@ import android.widget.TextView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,24 +42,26 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+//LD_PRELOAD='/usr/lib/x86_64-linux-gnu/libstdc++.so.6' ~/Android/Sdk/tools/emulator -netdelay none -netspeed full -avd Nexus_4_API_21
+
 public class PicsListActivity extends AppCompatActivity {
 
+    protected PicsAdapter adapter;
 
-    // private Handler handler = new Handler();
+    public class DownloadTask extends AsyncTask<Void, Void, Void> {
 
-    private Runnable downloader = new Runnable() {
+        protected void onPreExecute(){}
 
         private final OkHttpClient client = new OkHttpClient();
         private String DOWNLOAD_URL = "http://partagephoto.local/albums/album1/";
 
         protected ArrayList<Pic> json2Pics(Response response) throws Exception {
             ArrayList<Pic> result = new ArrayList<>();
-            JSONArray values = new JSONArray(response.body().string());
-            Log.d("json2Pics", "" + response.body().string());
+            String body = response.body().string();
+            JSONArray values = new JSONArray(body);
+            Log.d("json2Pics", "" + body);
             for (int i = 0; i < values.length(); i++) {
-
                 JSONObject picJson = values.getJSONObject(i);
-
                 Pic pic = new Pic(
                         picJson.getString("url"),
                         picJson.getString("thumb_url"),
@@ -63,7 +70,6 @@ public class PicsListActivity extends AppCompatActivity {
                 result.add(pic);
             }
             Log.d("json2Pics", "" + result);
-
             return result;
         }
 
@@ -77,21 +83,27 @@ public class PicsListActivity extends AppCompatActivity {
                 if (!response.isSuccessful()) {
                     throw new IOException("Failed to download file: " + response);
                 }
-                json2Pics(response);
-                JSONArray reader = new JSONArray(response.body().string());
+                ArrayList<Pic> pics = json2Pics(response);
+                adapter.setList(pics);
             } catch (Exception e) {
                 Log.d("loadAlbum", "Failed to load album :");
                 Log.d("loadAlbum", e.toString());
+                e.printStackTrace();
             }
         }
 
-        @Override
-        public void run() {
+        protected Void doInBackground(Void... params) {
+            Log.d("doInBackground", DOWNLOAD_URL);
             loadAlbum();
+            return null;
         }
-    };
 
-
+        @Override
+        protected void onPostExecute(Void result) {
+            Log.d("onPostExecute", "onPostExecute");
+            adapter.notifyDataSetChanged();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,8 +122,10 @@ public class PicsListActivity extends AppCompatActivity {
         });
         RecyclerView rv = (RecyclerView)findViewById(R.id.rv_pics);
         rv.setLayoutManager(new GridLayoutManager(this, 2));
-        rv.setAdapter(new PicsAdapter());
-        downloader.run();
+        adapter = new PicsAdapter();
+        rv.setAdapter(adapter);
+        DownloadTask dlt = new DownloadTask();
+        dlt.execute();
     }
 
     @Override
@@ -139,15 +153,9 @@ public class PicsListActivity extends AppCompatActivity {
 
 class Pic {
 
-    private String name;
     private String url;
     private String thumb_url;
     private Double ts;
-
-
-    public Pic(String name) {
-        this.name = name;
-    }
 
     public Pic(String url, String thumb_url, Double ts) {
         this.url = url;
@@ -155,31 +163,14 @@ class Pic {
         this.ts = ts;
     }
 
-    public String getName() {
-        return name;
+    public String getUrl() {
+        return url;
     }
 }
 
 class PicsAdapter extends RecyclerView.Adapter<PicsAdapter.PicViewHolder> {
 
-    // private LayoutInflater inflater;
-
-    private final List<Pic> pics = Arrays.asList(
-            new Pic("tst"),
-            new Pic("tst1"),
-            new Pic("tst2"),
-            new Pic("tst3"),
-            new Pic("tst4"),
-            new Pic("tst5"),
-            new Pic("tst6"),
-            new Pic("tst7"),
-            new Pic("tst8"),
-            new Pic("tst9"),
-            new Pic("tst10"),
-            new Pic("tst11"),
-            new Pic("tst12"),
-            new Pic("tst13")
-    );
+    private ArrayList<Pic> pics = new ArrayList();
 
     @Override
     public int getItemCount() {
@@ -199,33 +190,9 @@ class PicsAdapter extends RecyclerView.Adapter<PicsAdapter.PicViewHolder> {
         holder.display(pic);
     }
 
-/*
-    PicsAdapter(Context _context, int resource, Pic[] pics) {
-        super(_context, resource, pics);
-        this.inflater = LayoutInflater.from(_context);
-        this.pics = pics;
+    public void setList(ArrayList<Pic> newPics) {
+        this.pics = newPics;
     }
-*/
-
-
-    private void fillPicView(View hebView, Pic pic){
-        /*
-        TextView viewName = (TextView) hebView.findViewById(R.id.hebergementItemViewName);
-        viewName.setText(hebergement.getName());
-        RatingBar viewNote = (RatingBar) hebView.findViewById(R.id.hebergementItemRatingBar);
-        viewNote.setRating(hebergement.getNote());
-        setPictoVisibility(hebView, R.id.imageViewMachineALaver, hebergement.isMachineALaver());
-        setPictoVisibility(hebView, R.id.imageViewWifi, hebergement.isWifi());
-        setPictoVisibility(hebView, R.id.imageViewRestaurant, hebergement.isRestaurant());
-        setPictoVisibility(hebView, R.id.imageViewPetitDejeuner, hebergement.isPetitDejeuner());
-        setPictoVisibility(hebView, R.id.imageViewCuisine, hebergement.isCuisine());
-        setPictoVisibility(hebView, R.id.imageViewAccesHandicape, hebergement.isAccessHandicape());
-        setPictoVisibility(hebView, R.id.imageViewChequesVacances, hebergement.isChequesVacances());
-        setPictoVisibility(hebView, R.id.imageViewAnimaux, hebergement.isAnimaux());
-        */
-    }
-
-
 
     public class PicViewHolder extends RecyclerView.ViewHolder {
 
@@ -243,7 +210,7 @@ class PicsAdapter extends RecyclerView.Adapter<PicsAdapter.PicViewHolder> {
                 public void onClick(View view) {
                     new AlertDialog.Builder(itemView.getContext())
                             .setTitle("Test")
-                            .setMessage(pic.getName())
+                            .setMessage(pic.getUrl())
                             .show();
                 }
             });
@@ -251,8 +218,10 @@ class PicsAdapter extends RecyclerView.Adapter<PicsAdapter.PicViewHolder> {
 
         public void display(Pic pic) {
             this.pic = pic;
-            picTextView.setText(pic.getName());
+            picTextView.setText(pic.getUrl());
         }
     }
+
+
 
 }
