@@ -5,8 +5,11 @@ $router = new \Delight\Router\Router();
 
 function this_url() {
     $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
-    $port = (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] != 80 ? ":$_SERVER[SERVER_PORT]" : "");
-    return  "$protocol://$_SERVER[HTTP_HOST]$port$_SERVER[REQUEST_URI]";
+    return  "$protocol://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+}
+function compute_root_url() {
+    $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
+    return  "$protocol://$_SERVER[HTTP_HOST]";
 }
 
 function remove_dot_slash($path) {
@@ -19,7 +22,7 @@ function file_last_modif($path) {
 
 function list_album($album) {
     $root_photos_url = $_SERVER['HTTP_HOST'] . '/albums/'.$album.'/';
-    $root_url = this_url();
+    $root_url = compute_root_url() . "/";
 
     $pics_path = './albums/'.$album.'/*.jpg';
     $files = glob($pics_path);
