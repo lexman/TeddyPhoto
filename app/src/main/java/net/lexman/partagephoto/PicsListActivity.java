@@ -1,14 +1,12 @@
 package net.lexman.partagephoto;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v4.util.Pair;
+import android.support.v4.util.LruCache;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -20,23 +18,19 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.BaseExpandableListAdapter;
-import android.widget.ImageView;
-import android.widget.RatingBar;
+import android.widget.ImageButton;
 import android.widget.TextView;
+
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.NetworkImageView;
+import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -53,7 +47,7 @@ public class PicsListActivity extends AppCompatActivity {
         protected void onPreExecute(){}
 
         private final OkHttpClient client = new OkHttpClient();
-        private String DOWNLOAD_URL = "http://partagephoto.local/albums/album1/";
+        private String DOWNLOAD_URL = "http://partagephoto.local:8081/albums/album1/";
 
         protected ArrayList<Pic> json2Pics(Response response) throws Exception {
             ArrayList<Pic> result = new ArrayList<>();
@@ -154,23 +148,52 @@ public class PicsListActivity extends AppCompatActivity {
 class Pic {
 
     private String url;
-    private String thumb_url;
+
+    private String thumbUrl;
     private Double ts;
 
-    public Pic(String url, String thumb_url, Double ts) {
+    public Pic(String url, String thumbUrl, Double ts) {
         this.url = url;
-        this.thumb_url = thumb_url;
+        this.thumbUrl = thumbUrl;
         this.ts = ts;
     }
 
     public String getUrl() {
         return url;
     }
+
+    public String getThumbUrl() {
+        return thumbUrl;
+    }
+
 }
 
 class PicsAdapter extends RecyclerView.Adapter<PicsAdapter.PicViewHolder> {
 
     private ArrayList<Pic> pics = new ArrayList();
+    private static ImageLoader imageLoader;
+
+    private static ImageLoader createImageLoader(Context context) {
+        RequestQueue requestQueue = Volley.newRequestQueue(context);
+        ImageLoader result = new ImageLoader(requestQueue, new ImageLoader.ImageCache() {
+            private final LruCache<String, Bitmap> mCache = new LruCache<String, Bitmap>(15);
+
+            public void putBitmap(String url, Bitmap bitmap) {
+                mCache.put(url, bitmap);
+            }
+
+            public Bitmap getBitmap(String url) {
+                return mCache.get(url);
+            }
+        });
+        return result;
+    }
+
+    private void initImageLoaderIfNeeded(Context context) {
+        if (imageLoader == null) {
+            imageLoader = createImageLoader(context);
+        }
+    }
 
     @Override
     public int getItemCount() {
@@ -179,10 +202,14 @@ class PicsAdapter extends RecyclerView.Adapter<PicsAdapter.PicViewHolder> {
 
     @Override
     public PicViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        Context context = parent.getContext();
+        LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(R.layout.pic_layout, parent, false);
+        initImageLoaderIfNeeded(context);
+
         return new PicViewHolder(view);
     }
+
 
     @Override
     public void onBindViewHolder(PicViewHolder holder, int position) {
@@ -196,16 +223,19 @@ class PicsAdapter extends RecyclerView.Adapter<PicsAdapter.PicViewHolder> {
 
     public class PicViewHolder extends RecyclerView.ViewHolder {
 
-        private final TextView picTextView;
-
         private Pic pic;
+        private final TextView picTextView;
+        private NetworkImageView picImage;
+        private ImageButton picBtn;
 
         public PicViewHolder(final View itemView) {
             super(itemView);
 
             picTextView = ((TextView) itemView.findViewById(R.id.picTextView));
+            picImage = ((NetworkImageView) itemView.findViewById(R.id.picImage));
+            picBtn = ((ImageButton) itemView.findViewById(R.id.picImageButton));
 
-            itemView.setOnClickListener(new View.OnClickListener() {
+            picBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     new AlertDialog.Builder(itemView.getContext())
@@ -219,6 +249,9 @@ class PicsAdapter extends RecyclerView.Adapter<PicsAdapter.PicViewHolder> {
         public void display(Pic pic) {
             this.pic = pic;
             picTextView.setText(pic.getUrl());
+            String url = pic.getThumbUrl();
+            picImage.setImageUrl(url,imageLoader);
+            picImage.setErrorImageResId(R.drawable.ic_autorenew_black_24dp);
         }
     }
 
