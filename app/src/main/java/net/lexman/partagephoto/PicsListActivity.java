@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.volley.RequestQueue;
@@ -115,7 +116,7 @@ public class PicsListActivity extends AppCompatActivity {
             }
         });
         RecyclerView rv = (RecyclerView)findViewById(R.id.rv_pics);
-        rv.setLayoutManager(new GridLayoutManager(this, 2));
+        rv.setLayoutManager(new GridLayoutManager(this, 4));
         adapter = new PicsAdapter();
         rv.setAdapter(adapter);
         DownloadTask dlt = new DownloadTask();
@@ -224,22 +225,19 @@ class PicsAdapter extends RecyclerView.Adapter<PicsAdapter.PicViewHolder> {
     public class PicViewHolder extends RecyclerView.ViewHolder {
 
         private Pic pic;
-        private final TextView picTextView;
         private NetworkImageView picImage;
-        private ImageButton picBtn;
 
         public PicViewHolder(final View itemView) {
             super(itemView);
 
-            picTextView = ((TextView) itemView.findViewById(R.id.picTextView));
             picImage = ((NetworkImageView) itemView.findViewById(R.id.picImage));
-            picBtn = ((ImageButton) itemView.findViewById(R.id.picImageButton));
+            ImageView imgDownload = ((ImageView) itemView.findViewById(R.id.picImageDownload));
 
-            picBtn.setOnClickListener(new View.OnClickListener() {
+            imgDownload.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     new AlertDialog.Builder(itemView.getContext())
-                            .setTitle("Test")
+                            .setTitle("Url")
                             .setMessage(pic.getUrl())
                             .show();
                 }
@@ -248,7 +246,6 @@ class PicsAdapter extends RecyclerView.Adapter<PicsAdapter.PicViewHolder> {
 
         public void display(Pic pic) {
             this.pic = pic;
-            picTextView.setText(pic.getUrl());
             String url = pic.getThumbUrl();
             picImage.setImageUrl(url,imageLoader);
             picImage.setErrorImageResId(R.drawable.ic_autorenew_black_24dp);
