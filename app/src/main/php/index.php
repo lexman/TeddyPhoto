@@ -27,7 +27,7 @@ function list_album($album) {
     $pics_path = './albums/'.$album.'/*.jpg';
     $files = glob($pics_path);
     $res = [];
-    foreach($files as $file ) {
+    foreach($files as $file) {
         $elemt = array(
             "url" => $root_url . remove_dot_slash($file),
             "thumb_url" => $root_url . remove_dot_slash($file),
@@ -45,6 +45,36 @@ $router->get('/albums/:album/', function ($album) {
     print($album);
 });
 
-// phpinfo();
+function post_image($album) {
+    if ($album == "album1") {        
+        $body = file_get_contents('php://input');
+        $file = "".time().".jpg";
+        $pics_path = './albums/'.$album . '/';
+        file_put_contents($pics_path . $file, $body);
+        
+        $root_url = compute_root_url() . "/";
+
+        $pic = array(
+            "url" => $root_url . $file,
+            "thumb_url" => $root_url . $file,
+            "ts" => file_last_modif($pics_path . $file)
+        );
+        return json_encode($pic);
+    }
+    return null;
+}
+
+$router->post('/albums/:album/', function ($album) {
+    $res = null;
+    if ($album == "album1") {
+        $res = post_image($album);
+    }
+    if ($res != null) {
+        print($res);
+    } else {
+        // 400 !
+    } 
+});
+
 ?>
 

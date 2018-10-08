@@ -10,8 +10,24 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="net.lexman.partagephoto.SharePhotoActivity">
 
+    <Button
+        android:text="Partager dans Album"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/button3"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:onClick="onShareClick" />
+
     <android.support.v7.widget.RecyclerView
+        android:layout_alignParentTop="true"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/rvUploader" />
+        android:id="@+id/rvUploader"
+        android:layout_above="@+id/button3">
+
+    </android.support.v7.widget.RecyclerView>
+
+
 </RelativeLayout>
