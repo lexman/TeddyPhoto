@@ -1,4 +1,4 @@
-package net.lexman.partagephoto;
+package net.lexman.teddyphoto;
 
 import android.content.Context;
 import android.content.Intent;
@@ -15,28 +15,15 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.android.volley.toolbox.NetworkImageView;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.CharBuffer;
 import java.util.ArrayList;
 
-import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okio.BufferedSink;
-import okio.ByteString;
 
 public class SharePhotoActivity extends AppCompatActivity {
 

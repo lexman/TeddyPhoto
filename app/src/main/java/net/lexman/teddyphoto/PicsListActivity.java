@@ -174,7 +174,7 @@ class PicsAdapter extends RecyclerView.Adapter<PicsAdapter.PicViewHolder> {
 
     private static ImageLoader createImageLoader(Context context) {
         RequestQueue requestQueue = Volley.newRequestQueue(context);
-        ImageLoader result = new ImageLoader(requestQueue, new ImageLoader.ImageCache() {
+        return new ImageLoader(requestQueue, new ImageLoader.ImageCache() {
             private final LruCache<String, Bitmap> mCache = new LruCache<String, Bitmap>(15);
 
             public void putBitmap(String url, Bitmap bitmap) {
@@ -185,7 +185,6 @@ class PicsAdapter extends RecyclerView.Adapter<PicsAdapter.PicViewHolder> {
                 return mCache.get(url);
             }
         });
-        return result;
     }
 
     private void initImageLoaderIfNeeded(Context context) {
