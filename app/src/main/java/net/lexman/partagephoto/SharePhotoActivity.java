@@ -42,9 +42,6 @@ public class SharePhotoActivity extends AppCompatActivity {
 
     protected  ArrayList<Uri> imageUris;
     protected String mediaTypeSt;
-    //private String POST_PICTURE_URL = "http://partagephoto.local:8081/albums/album1/newphoto";
-    private String POST_PICTURE_URL = "http://partagephoto.local:8081/albums/album1/";
-    private final OkHttpClient client = new OkHttpClient();
     protected PicToUploadAdapter adapter;
 
     private final int MB = 1024 * 1024;
@@ -56,15 +53,20 @@ public class SharePhotoActivity extends AppCompatActivity {
         protected void onPreExecute(){}
 
         private final OkHttpClient client = new OkHttpClient();
-        private String POST_URL = "http://partagephoto.local:8081/albums/album1/";
+        // TODO
+        //private String POST_PICTURE_URL = "http://partagephoto.local:8081/albums/album1/newphoto";
+        private String POST_PICTURE_URL = "http://partagephoto.local:8081/albums/album1/";
 
-        public void postImage(Uri uri) throws  IOException {
+        private int currentImg = 0;
+
+        private void postImage(Uri uri) throws  IOException {
             Log.d("postImage", uri.toString());
             RequestBody body = RequestBody.create(
                     MediaType.parse(mediaTypeSt),
                     readImage(uri));
             Request request = new Request.Builder()
                     .url(POST_PICTURE_URL)
+                    // TODO
                     .header("Authorization", "Basic " + "xxx")
                     .post(body)
                     .build();
@@ -79,19 +81,17 @@ public class SharePhotoActivity extends AppCompatActivity {
         }
 
         protected Void doInBackground(Void... params) {
-            int i = 0;
-            while (i < imageUris.size()) {
+            if (currentImg < imageUris.size()) {
                 try {
-                    Uri uri = imageUris.get(0);
+                    Uri uri = imageUris.get(currentImg );
                     Log.d("postImages", uri.toString());
                     postImage(uri);
-                    imageUris.remove(i);
-                    // adapter.notifyDataSetChanged();
+                    imageUris.remove(currentImg);
                 } catch (IOException e) {
                     // skip this picture if upload failed,
                     // in case the error is due to the image
-                    i++;
                     e.printStackTrace();
+                    currentImg ++;
                 }
             }
             return null;
@@ -99,11 +99,21 @@ public class SharePhotoActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void result) {
-            Log.d("onPostExecute", "onPostExecute");
             adapter.notifyDataSetChanged();
+            if (imageUris.size() == 0) {
+                // All images have been uploaded, we go back to main view
+                Intent intent = new Intent(getBaseContext(), PicsListActivity.class);
+                startActivity(intent);
+                return;
+            }
+            if (currentImg < imageUris.size()) {
+                execute();
+            } else {
+                Toast t = Toast.makeText(getBaseContext(), "Some pictures couldn't be uploaded. Does your network connexion work ? Please retry.", Toast.LENGTH_LONG);
+                t.show();
+            }
         }
     }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,8 +139,6 @@ public class SharePhotoActivity extends AppCompatActivity {
     }
 
     public void onShareClick(View v) {
-        Toast.makeText(this.getBaseContext(), "Click", Toast.LENGTH_LONG);
-        Log.d("onShareClick", "clik");
         UploadTask dlt = new UploadTask();
         dlt.execute();
     }
@@ -145,13 +153,12 @@ public class SharePhotoActivity extends AppCompatActivity {
         }
         return buff;
     }
-
 }
 
 
 class PicToUploadAdapter extends RecyclerView.Adapter<PicToUploadAdapter.PicToUploadHolder> {
 
-    private ArrayList<Uri> picsToUploadUris = new ArrayList();
+    private ArrayList<Uri> picsToUploadUris;
 
     @Override
     public int getItemCount() {
@@ -172,7 +179,7 @@ class PicToUploadAdapter extends RecyclerView.Adapter<PicToUploadAdapter.PicToUp
         holder.display(picToUpload);
     }
 
-    public void setList(ArrayList<Uri> picsToUploadUris) {
+    protected void setList(ArrayList<Uri> picsToUploadUris) {
         this.picsToUploadUris = picsToUploadUris;
     }
 
