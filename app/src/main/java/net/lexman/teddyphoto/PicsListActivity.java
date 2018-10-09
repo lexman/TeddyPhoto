@@ -1,4 +1,4 @@
-package net.lexman.partagephoto;
+package net.lexman.teddyphoto;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -18,9 +18,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
@@ -50,7 +48,7 @@ public class PicsListActivity extends AppCompatActivity {
         private final OkHttpClient client = new OkHttpClient();
         private String DOWNLOAD_URL = "http://partagephoto.local:8081/albums/album1/";
 
-        protected ArrayList<Pic> json2Pics(Response response) throws Exception {
+        private ArrayList<Pic> json2Pics(Response response) throws Exception {
             ArrayList<Pic> result = new ArrayList<>();
             String body = response.body().string();
             JSONArray values = new JSONArray(body);
@@ -68,7 +66,7 @@ public class PicsListActivity extends AppCompatActivity {
             return result;
         }
 
-        protected void loadAlbum() {
+        private void loadAlbum() {
             Request request = new Request.Builder()
                     .url(DOWNLOAD_URL)
                     .header("Authorization", "Basic " + "XXXX")

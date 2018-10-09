@@ -8,7 +8,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="net.lexman.partagephoto.SharePhotoActivity">
+    tools:context="net.lexman.teddyphoto.SharePhotoActivity">
 
     <Button
         android:text="Partager dans Album"

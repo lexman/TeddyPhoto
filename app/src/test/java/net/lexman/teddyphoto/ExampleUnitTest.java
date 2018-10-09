@@ -1,4 +1,4 @@
-package net.lexman.partagephoto;
+package net.lexman.teddyphoto;
 
 import org.junit.Test;
 
