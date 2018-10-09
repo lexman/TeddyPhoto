@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("net.lexman.partagephoto", appContext.getPackageName());
+        assertEquals("net.lexman.teddyphoto", appContext.getPackageName());
     }
 }
